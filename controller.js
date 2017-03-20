@@ -173,3 +173,56 @@ angular.module('app').controller('AppController', function($scope, $http) {
     $scope.search();
   });
 });
+angular.module('app').controller('DetailController', function($scope, $http) {
+  $scope.mapClick = function() {
+    window.location.href = "http://maps.google.com/maps?z=16&t=m&q=loc:" +
+      $scope.lat + "+" + $scope.lng;
+  };
+
+  $scope.venueID = navi.getCurrentPage().options.venueID;
+  $scope.obj = {
+    state: 'loading',
+  };
+
+  var clientID = "4UWL04HB541RF00Y3LRZTCA4LJN0ZAUYWQFFRXRLSWJSNSWV";
+  var clientSecret = "0CVFSMHIKNDSAYLG0VC5YEFSUIA5WMRPTY4I4Z14PRAC4Z2S";
+
+  $http.get(
+    "https://api.foursquare.com/v2/venues/" +
+    $scope.venueID +
+    "?client_id=" + clientID +
+    "&client_secret=" + clientSecret +
+    "&v=20131124"
+  ).then(function(result, status) {
+    $scope.obj.state = 'loaded';
+    var venue = result.data.response.venue;
+    $scope.title = venue.name;
+    $scope.imgSrc = venue.bestPhoto.prefix + '300x300' + venue.bestPhoto.suffix;
+
+    $scope.address = venue.location.formattedAddress[0] + ',' + venue.location.formattedAddress[1];
+    $scope.openInfo = $scope.parseOpenInformation(venue.popular);
+    $scope.lat = venue.location.lat;
+    $scope.lng = venue.location.lng;
+  }, function(data, status) {
+    $scope.obj.state = 'noResult';
+  });
+
+  $scope.backClick = function() {
+    navi.popPage();
+  };
+
+  $scope.parseOpenInformation = function(data) {
+  var info = "";
+  if (data && data.timeframes) {
+    for (var i in data.timeframes[0].open) {
+      if (i !== 0) {
+        info += '\n';
+      }
+      info += data.timeframes[0].open[i].renderedTime;
+    }
+  }
+
+  return info;
+};
+
+});
